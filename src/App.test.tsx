@@ -22,6 +22,6 @@ describe("Evidence Studio shell", () => {
     await user.click(screen.getByRole("button", { name: /Verify$/ }));
     expect(screen.getByText("Artifact verified")).toBeInTheDocument();
     expect(screen.getByText("releaseAuthorized:false", { selector: "strong" })).toBeInTheDocument();
-    expect(screen.getByText(/NOT_VERIFIED 21/i)).toBeInTheDocument();
+    expect(screen.getByText(/NOT_VERIFIED 21/i, { selector: "section.subject p" })).toBeInTheDocument();
   });
 });

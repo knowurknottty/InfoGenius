@@ -6,6 +6,7 @@ interface Props {
 }
 
 const format = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+const supportedFamilies = new Set<VisualSpec["family"]>(["bar", "dot", "line", "area", "scatter", "histogram", "status", "table"]);
 
 function number(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value)) ? Number(value) : null;
@@ -99,11 +100,20 @@ function LineVisual({ spec, dataset }: Props) {
   return <svg className="chart-svg" viewBox="0 0 720 360" role="img" aria-label={spec.accessibleSummary}><title>{spec.title}</title><polyline points={points} fill="none" className="chart-line" />{rows.map((row) => <g key={row.x}><circle cx={50 + row.x * step} cy={310 - row.value / max * 250} r={5} /><text x={50 + row.x * step} y={340} textAnchor="middle" className="chart-axis-label">{row.label}</text></g>)}</svg>;
 }
 
+function UnsupportedVisual({ spec }: Pick<Props, "spec">) {
+  return (
+    <div className="visual-blocked" role="note" aria-label={`${spec.family} visual rendering blocked`}>
+      <strong>{spec.family} visual family is not available in this deterministic renderer.</strong>
+      <span>Semantic fallback could change the analytical meaning, so rendering blocked.</span>
+    </div>
+  );
+}
+
 export function VisualRenderer(props: Props) {
+  if (!supportedFamilies.has(props.spec.family)) return <UnsupportedVisual spec={props.spec} />;
   if (props.spec.family === "table") return <TableVisual {...props} />;
   if (props.spec.family === "status") return <StatusVisual {...props} />;
   if (props.spec.family === "bar" || props.spec.family === "dot" || props.spec.family === "histogram") return <BarVisual {...props} />;
   if (props.spec.family === "scatter") return <ScatterVisual {...props} />;
-  if (props.spec.family === "line" || props.spec.family === "area") return <LineVisual {...props} />;
-  return <TableVisual {...props} />;
+  return <LineVisual {...props} />;
 }
