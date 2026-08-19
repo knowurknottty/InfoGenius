@@ -10,14 +10,41 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  verify-head:
+    name: verify exact head
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
+          package-manager-cache: false
       - run: npm install --no-audit --no-fund
       - run: npm run test:run
       - run: npm run typecheck
       - run: npm run build
+      - name: Record exact checkout identity
+        run: |
+          echo "verified_sha=$(git rev-parse HEAD)"
+          git status --short --branch
+
+  verify-merge:
+    name: verify PR merge ref
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - run: npm install --no-audit --no-fund
+      - run: npm run test:run
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Record merge checkout identity
+        run: |
+          echo "verified_sha=$(git rev-parse HEAD)"
+          git status --short --branch
