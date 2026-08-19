@@ -1,0 +1,13 @@
+# CAPT macOS Capability Gap Ledger
+
+CAPT macOS is the requested governed worker/reviewer. The reasoning/controller layer owns architecture, inference, reconciliation, and adjudication. When CAPT cannot perform an operation, the fallback is explicit and the gap remains open.
+
+| ID | Operation | Expected | Actual | Reproduction / evidence | Controlled fallback | Severity | Repair workflow |
+|---|---|---|---|---|---|---|---|
+| CAPT-IG-001 | Reconfigure provider/model/target root and continue governed chat through the native Accessibility surface | Window remains present; task is accepted or a specific validation error is surfaced | `CAPTNativeMac` remained alive but exposed zero Accessibility windows after the sequence | CAPT was initially connected with `integrity ok`; after automated field mutations/connect/send, System Events reported no window while process remained alive | Clean relaunch; isolate mutations one at a time | Medium | Add stable native automation identifiers/actions; scene-lifecycle telemetry; integration test that context changes cannot strand the process windowless |
+| CAPT-IG-002 | Submit governed task after changing only Target root to `/Users/knowurknot/InfoGenius` | Chat submit creates a task or visible error without destroying the scene | Target-root-only mutation stayed stable; subsequent submit attempt again left the process windowless before the task could be observed | Clean `killall CAPTNativeMac` + relaunch → target mutation retained one window → submit path failed with Accessibility `Invalid index` and window disappeared | Direct repository tooling; CAPT remains required as final verifier when native path is restored | High | Add native chat-submit UI automation test; stable `AXIdentifier` on input/send/context fields; capture scene + task-creation logs around submit |
+| CAPT-IG-003 | Continue CAPT/local Mac execution through Remote Desktop Commander | Connected Mac remains reachable for CAPT, local repo, and browser verification | Remote transport timed out, then device became explicitly offline while auth remained valid | Device `Kirks-MacBook-Pro.local`, id `af004fff-b56d-4307-a587-1486435c3b6c`, app version `0.2.47`, status `offline`, last seen `2026-08-19T22:01:59.248+00:00`, auth token `valid` | GitHub branch + GitHub Actions are temporary execution/verification transport; no second product authority | High | Restore RDC transport; fast-forward/reconcile `/Users/knowurknot/InfoGenius`; rerun CAPT governed review and browser smoke before declaring CAPT verification complete |
+
+## Closure rule
+
+A gap is closed only by a reproduction that demonstrates the expected behavior through the actual CAPT/macOS/RDC path. A cloud fallback does not close a CAPT defect.

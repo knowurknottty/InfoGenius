@@ -1,0 +1,6 @@
+region,revenue,rate,count
+A,$10,10%,5
+A,$12,,5
+B,14,12%,7
+B,$12,oops,9
+B,$12,oops,9
