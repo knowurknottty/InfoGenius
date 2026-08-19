@@ -9,7 +9,7 @@ describe("Evidence Studio shell", () => {
     render(<App />);
     for (const stage of ["Intake", "Profile", "Ask", "Compose", "Verify", "Export"]) expect(screen.getByRole("button", { name: new RegExp(`${stage}$`) })).toBeInTheDocument();
     expect(screen.getByText("CAPT Core — August 19 Evidence Brief")).toBeInTheDocument();
-    expect(screen.getByText("Verified execution volume by suite")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Verified execution volume by suite" })).toBeInTheDocument();
     expect(screen.getByText("1,096")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /CAPT Core has strong convergence evidence while release authority remains incomplete/i }));
     expect(screen.getByRole("heading", { name: "Evidence lineage" })).toBeInTheDocument();
@@ -17,10 +17,11 @@ describe("Evidence Studio shell", () => {
   });
 
   it("keeps artifact verification separate from the CAPT release gate", async () => {
-    const user = userEvent.setup(); render(<App />);
+    const user = userEvent.setup();
+    render(<App />);
     await user.click(screen.getByRole("button", { name: /Verify$/ }));
     expect(screen.getByText("Artifact verified")).toBeInTheDocument();
-    expect(screen.getByText(/releaseAuthorized:false/i)).toBeInTheDocument();
+    expect(screen.getByText("releaseAuthorized:false", { selector: "strong" })).toBeInTheDocument();
     expect(screen.getByText(/NOT_VERIFIED 21/i)).toBeInTheDocument();
   });
 });
