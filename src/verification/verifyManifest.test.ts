@@ -41,10 +41,33 @@ describe("manifest verification", () => {
     expect(report.findings.map((f) => f.code)).toEqual(expect.arrayContaining(["MIXED_UNITS", "CHANGING_DENOMINATOR"]));
   });
 
+  it("detects denominator drift directly from rate + denominator-shaped columns", () => {
+    const manifest = baseManifest();
+    manifest.datasets[0] = {
+      ...manifest.datasets[0],
+      columns: [{ id: "period", label: "Period", type: "integer" }, { id: "events", label: "Events", type: "integer" }, { id: "population", label: "Population", type: "integer" }, { id: "rate", label: "Rate", type: "number", unit: "percent" }],
+      rows: [{ period: 2024, events: 10, population: 100, rate: 10 }, { period: 2025, events: 15, population: 300, rate: 5 }, { period: 2026, events: 20, population: 250, rate: 8 }],
+      rowCount: 3, representedRowCount: 3, missingness: { period: 0, events: 0, population: 0, rate: 0 }
+    };
+    manifest.visuals[0] = { ...manifest.visuals[0], datasetId: "d", encodings: { x: "period", y: "rate" } };
+    const report = verifyManifest(manifest, "2026-08-19T00:00:00Z");
+    expect(report.state).toBe("warnings");
+    expect(report.findings.map((f) => f.code)).toContain("CHANGING_DENOMINATOR");
+  });
+
   it("blocks causal language when evidence is explicitly correlation-only", () => {
     const manifest = baseManifest();
     manifest.claims[0] = { ...manifest.claims[0], text: "Higher coverage causes fewer failures.", epistemicStatus: "inference", claimType: "statistical_inference" };
     manifest.datasets[0].qualityFindings = [{ code: "CORRELATION_ONLY", severity: "warning", message: "Observational association only." }];
+    const report = verifyManifest(manifest, "2026-08-19T00:00:00Z");
+    expect(report.state).toBe("blocked");
+    expect(report.findings.map((f) => f.code)).toContain("CAUSAL_LANGUAGE_ON_CORRELATION");
+  });
+
+  it("blocks causal language for a relationship visual even without a hand-authored correlation flag", () => {
+    const manifest = baseManifest();
+    manifest.claims[0] = { ...manifest.claims[0], text: "Higher coverage causes fewer failures.", epistemicStatus: "inference", claimType: "statistical_inference" };
+    manifest.visuals[0] = { ...manifest.visuals[0], family: "scatter", analyticalJob: "relationship", claimIds: ["c"] };
     const report = verifyManifest(manifest, "2026-08-19T00:00:00Z");
     expect(report.state).toBe("blocked");
     expect(report.findings.map((f) => f.code)).toContain("CAUSAL_LANGUAGE_ON_CORRELATION");

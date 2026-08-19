@@ -29,6 +29,7 @@
     "@types/papaparse": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "fake-indexeddb": "latest",
     "jsdom": "latest",
     "typescript": "latest",
     "vite": "latest",
