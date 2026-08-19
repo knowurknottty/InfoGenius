@@ -1,0 +1,16 @@
+{
+  "source": "https://chatgpt.com/share/6a862225-2074-83ea-8ba8-be7f52b4c3f9",
+  "captured_on_mac_bytes": 13593,
+  "facts": {
+    "main": "4a2eddbf0dbd09b976e2c890ce6f704db3fce8cf",
+    "pr117": "5c0bdf02a3eb6d20cb4c33b0ad3ec517a0d11689",
+    "pr118": "0dbb9fa467127830089763a22723f44c744ba335",
+    "python": { "passed": 1096, "skipped": 13, "deselected": 12, "failed": 0 },
+    "swift": { "passed": 63, "skipped": 7, "deselected": 0, "failed": 0 },
+    "mcp": { "passed": 259, "skipped": 0, "deselected": 0, "failed": 0 },
+    "security": { "PASS": 0, "FAIL": 0, "NOT_VERIFIED": 21, "N/A": 26, "releaseAuthorized": false },
+    "runtime_start": "05:30:56 CDT",
+    "pr118_era_install": "10:19:36–10:19:37 CDT"
+  },
+  "provenance_note": "Structured extraction of the shared CAPT Weekly Brief. The original byte-for-byte text capture remains on the user's Mac and will replace the logical source binding after RDC transport recovery."
+}
