@@ -6,7 +6,7 @@ function evidence(id: string, locator: string, content: string): EvidenceRecord 
 const manifest: ArtifactManifest = {
   schemaVersion: "1.0.0",
   project: { id: "project-capt-weekly-2026-08-19", name: "CAPT Core — August 19 Evidence Brief", createdAt: "2026-08-19T16:29:00-05:00", updatedAt: "2026-08-19T16:29:00-05:00" },
-  sources: [{ id: "src-capt-weekly", name: "CAPT Weekly Brief shared conversation", mediaType: "text/plain", digest: "logical:chatgpt-share:6a862225-2074-83ea-8ba8-be7f52b4c3f9", byteSize: 13593, origin: "chatgpt_share", parseState: "parsed", locatorCapabilities: ["line"], warnings: ["Logical source binding is used in the cloud rebuild because the byte-for-byte Mac capture is awaiting transport reconciliation."] }],
+  sources: [{ id: "src-capt-weekly", name: "CAPT Weekly Brief shared conversation", mediaType: "text/plain", digest: "sha256:2bcf85fd175edfaa03662f196c84f528e2a73803f7875635945af0e79949507a", byteSize: 13593, origin: "chatgpt_share", parseState: "parsed", locatorCapabilities: ["line"] }],
   evidence: [
     evidence("ev-main", "Main convergence paragraph", "Main commit: 4a2eddbf0dbd09b976e2c890ce6f704db3fce8cf."),
     evidence("ev-pr117", "PR #117 paragraph", "PR #117 branch integration/capt-core-terminal-convergence-r2 head 5c0bdf02a3eb6d20cb4c33b0ad3ec517a0d11689."),
@@ -37,7 +37,7 @@ const manifest: ArtifactManifest = {
     { id: "visual-runtime", title: "Installed source ≠ proven running process", family: "table", analyticalJob: "table_lookup", datasetId: "ds-runtime-identity", claimIds: ["claim-runtime-identity-gap"], evidenceIds: ["ev-installed", "ev-runtime"], encodings: { columns: "event,time" }, annotations: [{ text: "Restart and re-probe before claiming runtime identity.", claimId: "claim-runtime-identity-gap" }], filters: {}, accessibleSummary: "The running service started around 05:30:56 CDT and the PR 118-era install occurred around 10:19:36 to 10:19:37 CDT." }
   ],
   auditEvents: [],
-  warnings: ["Cloud reconstruction uses a logical binding to the shared conversation until the byte-for-byte Mac capture can be synchronized after RDC recovery."],
+  warnings: [],
   exportMetadata: { generatedAt: "2026-08-19T16:29:00-05:00", generator: "InfoGenius Evidence Studio", formatVersion: "1.0.0" }
 };
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ingestTextSource } from "./intake";
+import { ingestFile, ingestTextSource } from "./intake";
 
 describe("source intake", () => {
   it("computes a cryptographic digest and creates a deterministic dataset from CSV", async () => {
@@ -43,4 +43,15 @@ describe("source intake", () => {
   it("rejects executable/unsupported content instead of treating it as analyzable data", async () => {
     await expect(ingestTextSource({ name: "payload.exe", mediaType: "application/octet-stream", text: "MZ..." })).rejects.toThrow(/unsupported/i);
   });
+  it("ingests XLSX with byte-level SHA-256 identity", async () => {
+    const XLSX = await import("xlsx");
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([["name", "score"], ["alpha", 9], ["beta", 11]]), "Data");
+    const bytes = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+    const result = await ingestFile(new File([bytes], "scores.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+    expect(result.source.digest).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(result.dataset?.rowCount).toBe(2);
+    expect(result.previewRows[0]).toMatchObject({ name: "alpha", score: 9 });
+  });
+
 });
