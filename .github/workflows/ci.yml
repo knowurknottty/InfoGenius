@@ -21,10 +21,11 @@ jobs:
         with:
           node-version: 22
           package-manager-cache: false
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm run test:run
       - run: npm run typecheck
       - run: npm run build
+      - run: npm audit --omit=dev
       - name: Record exact checkout identity
         run: |
           echo "verified_sha=$(git rev-parse HEAD)"
@@ -40,10 +41,11 @@ jobs:
         with:
           node-version: 22
           package-manager-cache: false
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm run test:run
       - run: npm run typecheck
       - run: npm run build
+      - run: npm audit --omit=dev
       - name: Record merge checkout identity
         run: |
           echo "verified_sha=$(git rev-parse HEAD)"

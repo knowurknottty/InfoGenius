@@ -3,7 +3,7 @@ import { Database, FileCheck2, FlaskConical, LayoutDashboard, Search, Share2, Sh
 import { CAPT_WEEKLY_BRIEF_MANIFEST } from "./demo/captWeeklyBrief";
 import type { ArtifactManifest, ClaimRecord } from "./domain/artifact";
 import { exportManifest } from "./export/manifest";
-import { ingestTextSource } from "./features/intake/intake";
+import { ingestFile, type IntakeResult } from "./features/intake/intake";
 import { classifyAnalyticalJob } from "./analytics/classifyVisual";
 import { verifyManifest } from "./verification/verifyManifest";
 import { VisualRenderer } from "./visuals/VisualRenderer";
@@ -71,20 +71,20 @@ function VerifyStage({ manifest }: { manifest: ArtifactManifest }) {
   return <div className="stage-document verify-stage"><header><div className="eyebrow">VERIFY</div><h1>{report.state === "verified" ? "Artifact verified" : report.state === "warnings" ? "Artifact has warnings" : "Artifact blocked"}</h1><p>Verification recomputes lineage and deterministic guards. It does not inherit the release state of the system being described.</p></header><div className="verification-grid"><section className="verification-card"><ShieldCheck aria-hidden="true" /><span>ARTIFACT INTEGRITY</span><strong>{report.state.toUpperCase()}</strong><p>{report.evidenceCoverage.claimsWithEvidence}/{report.evidenceCoverage.publishableClaims} publishable claims evidenced · {report.evidenceCoverage.visualsWithEvidence}/{report.evidenceCoverage.totalVisuals} visuals evidenced</p></section><section className="verification-card subject"><FlaskConical aria-hidden="true" /><span>SUBJECT RELEASE STATE</span><strong>releaseAuthorized:false</strong><p>NOT_VERIFIED {byStatus.NOT_VERIFIED} · N/A {byStatus["N/A"]} · FAIL {byStatus.FAIL} · PASS {byStatus.PASS}</p></section></div><blockquote>{releaseClaim.text}</blockquote>{report.findings.length === 0 ? <p className="quality-clear">No deterministic publication blockers in this Evidence Studio artifact.</p> : <div>{report.findings.map((finding) => <p key={finding.id} className={`quality-finding ${finding.severity}`}>{finding.code}: {finding.message}</p>)}</div>}<p className="verification-note"><strong>Critical distinction:</strong> this means the Evidence Studio representation is internally evidenced and structurally valid. It does not upgrade CAPT's own release authorization.</p></div>;
 }
 
-function IntakeStage({ manifest, onImport }: { manifest: ArtifactManifest; onImport: (result: Awaited<ReturnType<typeof ingestTextSource>>) => void }) {
-  const [state, setState] = useState("Drop CSV, TSV, JSON, JSONL, TXT, or Markdown. Uploaded content is data, never instruction authority.");
+function IntakeStage({ manifest, onImport }: { manifest: ArtifactManifest; onImport: (result: IntakeResult) => void }) {
+  const [state, setState] = useState("Drop CSV, TSV, JSON, JSONL, XLS/XLSX, TXT, or Markdown. Uploaded content is data, never instruction authority.");
   const digests = new Set(manifest.sources.map((source) => source.digest));
   async function files(list: FileList | null) {
     if (!list?.length) return;
     for (const file of Array.from(list)) {
       try {
-        const result = await ingestTextSource({ name: file.name, mediaType: file.type || "text/plain", text: await file.text() }, digests);
+        const result = await ingestFile(file, digests);
         onImport(result);
         setState(result.duplicate ? `${file.name}: duplicate content digest detected; source was not silently merged.` : `${file.name}: parsed ${result.dataset?.rowCount ?? result.evidence.length} addressable record(s).`);
       } catch (error) { setState(error instanceof Error ? error.message : "Source ingestion failed."); }
     }
   }
-  return <div className="stage-document"><header><div className="eyebrow">INTAKE</div><h1>Bring evidence. Keep authority.</h1><p>Content is fingerprinted and parsed deterministically before it is allowed into the claim graph.</p></header><label className="drop-zone"><UploadCloud size={30} aria-hidden="true" /><strong>Drop source files here</strong><span>or choose files from this device</span><input type="file" multiple accept=".csv,.tsv,.json,.jsonl,.ndjson,.txt,.md,text/csv,text/tab-separated-values,application/json,text/plain" onChange={(event) => void files(event.currentTarget.files)} /></label><p className="intake-state" role="status">{state}</p><div className="intake-policies"><div><strong>Fingerprint</strong><span>SHA-256 dedupe</span></div><div><strong>Parse</strong><span>verbatim + typed</span></div><div><strong>Authority</strong><span>uploaded instructions ignored</span></div></div></div>;
+  return <div className="stage-document"><header><div className="eyebrow">INTAKE</div><h1>Bring evidence. Keep authority.</h1><p>Content is fingerprinted and parsed deterministically before it is allowed into the claim graph.</p></header><label className="drop-zone"><UploadCloud size={30} aria-hidden="true" /><strong>Drop source files here</strong><span>or choose files from this device</span><input type="file" multiple accept=".csv,.tsv,.json,.jsonl,.ndjson,.txt,.md,.xlsx,.xls,text/csv,text/tab-separated-values,application/json,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={(event) => void files(event.currentTarget.files)} /></label><p className="intake-state" role="status">{state}</p><div className="intake-policies"><div><strong>Fingerprint</strong><span>SHA-256 dedupe</span></div><div><strong>Parse</strong><span>verbatim + typed</span></div><div><strong>Authority</strong><span>uploaded instructions ignored</span></div></div></div>;
 }
 
 function ExportStage({ manifest }: { manifest: ArtifactManifest }) {
@@ -100,7 +100,7 @@ export default function App() {
   const [stage, setStage] = useState<Stage>("Compose");
   const [manifest, setManifest] = useState<ArtifactManifest>(CAPT_WEEKLY_BRIEF_MANIFEST);
   const [claim, setClaim] = useState<ClaimRecord | null>(null);
-  function importResult(result: Awaited<ReturnType<typeof ingestTextSource>>) {
+  function importResult(result: IntakeResult) {
     if (result.duplicate) return;
     setManifest((current) => ({ ...current, project: { ...current.project, updatedAt: new Date().toISOString() }, sources: [...current.sources, result.source], evidence: [...current.evidence, ...result.evidence], datasets: result.dataset ? [...current.datasets, result.dataset] : current.datasets, auditEvents: [...current.auditEvents, { id: `audit-import-${result.source.id}`, operation: "source_ingest", timestamp: new Date().toISOString(), actor: "deterministic_tool", toolOrModel: "InfoGenius browser ingest" }] }));
   }

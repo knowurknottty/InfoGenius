@@ -11,3 +11,12 @@ CAPT macOS is the requested governed worker/reviewer. The reasoning/controller l
 ## Closure rule
 
 A gap is closed only by a reproduction that demonstrates the expected behavior through the actual CAPT/macOS/RDC path. A cloud fallback does not close a CAPT defect.
+
+## 2026-08-23 continuation findings
+
+| ID | Operation | Expected | Actual | Reproduction / evidence | Controlled fallback | Severity | Repair workflow |
+|---|---|---|---|---|---|---|---|
+| CAPT-IG-003-CLOSURE | Restore RDC transport | Authenticated Mac returns online and local CAPT/repo operations resume | Device is online again and local execution resumed successfully | `Kirks-MacBook-Pro.local` responded to ping and repo/CAPT commands on 2026-08-23 | None; use restored local authority | Closed | Preserve reconnect telemetry and add an automated post-reconnect health probe |
+| CAPT-IG-004 | Broad development-root search | Permission-denied system paths are reported but do not abort accessible search results | Searching `/Users/knowurknot` aborted on protected `~/Library` paths with `Operation not permitted` | Narrow search of `/Users/knowurknot/InfoGenius` succeeds | Scope search to known development roots; do not bypass macOS privacy controls | Medium | Make search permission-aware and return partial-result status plus denied-path findings |
+| CAPT-IG-005 | Start a fresh governed task in CAPT macOS | New-task surface is stable and automation-addressable | CAPTNativeMac launches with one AX window but restores an old FLOCK review; a deterministic new governed-task action is not exposed through the current AX contract | `open -n CAPT.app` -> live process; AX window count 1; restored FLOCK review title observed | Keep CAPT open; direct deterministic repo tooling remains fallback until native task submission is repaired | High | Add App Intents/stable AX identifiers for New Governed Task, target-root binding, submit, and task receipt; test restored-session isolation |
+| CAPT-IG-006 | Vendor third-party release artifact under governed remote execution | Download, hash, and commit an exact official tarball | Direct tarball-vendoring command was blocked by the remote execution safety layer | Official SheetJS 0.20.3 URL install succeeded; package-lock records SHA-512 integrity; audit is clean | Pin official URL + lockfile integrity | Low | Add digest-allowlisted artifact download/vendoring primitive |

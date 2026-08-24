@@ -180,3 +180,30 @@ export async function ingestTextSource(input: TextSourceInput, existingDigests: 
     warnings: dataset?.qualityFindings?.map((finding) => finding.message) ?? []
   };
 }
+
+
+export async function ingestFile(file: File, existingDigests: Set<string> = new Set(), previewLimit = PREVIEW_LIMIT): Promise<IntakeResult> {
+  const ext = extension(file.name);
+  if (ext !== "xlsx" && ext !== "xls") {
+    return ingestTextSource({ name: file.name, mediaType: file.type || "text/plain", text: await file.text() }, existingDigests, previewLimit);
+  }
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) throw new Error("Web Crypto SHA-256 is unavailable in this execution environment.");
+  const bytes = await file.arrayBuffer();
+  const digest = `sha256:${hex(await subtle.digest("SHA-256", bytes))}`;
+  const sourceId = `src-${digest.slice("sha256:".length, "sha256:".length + 16)}`;
+  const source: SourceAsset = {
+    id: sourceId, name: file.name, mediaType: file.type || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    digest, byteSize: file.size, origin: "upload", parseState: "parsed", locatorCapabilities: ["path", "cell"]
+  };
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.read(bytes, { type: "array", cellDates: true });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) throw new Error("Spreadsheet contains no worksheets.");
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], { defval: null, raw: true });
+  const built = makeJsonDataset(rows, source);
+  return {
+    source, evidence: built.evidence, dataset: built.dataset, previewRows: rows.slice(0, previewLimit),
+    previewTruncated: rows.length > previewLimit, duplicate: existingDigests.has(digest), warnings: []
+  };
+}
