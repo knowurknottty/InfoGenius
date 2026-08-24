@@ -1,0 +1,52 @@
+name: Evidence Studio CI
+
+on:
+  push:
+    branches: [main, feat/evidence-studio-r1]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-head:
+    name: verify exact head
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - run: npm run test:run
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm audit --omit=dev
+      - name: Record exact checkout identity
+        run: |
+          echo "verified_sha=$(git rev-parse HEAD)"
+          git status --short --branch
+
+  verify-merge:
+    name: verify PR merge ref
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - run: npm run test:run
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm audit --omit=dev
+      - name: Record merge checkout identity
+        run: |
+          echo "verified_sha=$(git rev-parse HEAD)"
+          git status --short --branch
